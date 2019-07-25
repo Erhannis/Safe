@@ -68,7 +68,7 @@ Each `Cond` has an associated `Mutex`, which must be held when changing the cond
 */
 open class Cond {
     fileprivate var cond = pthread_cond_t()
-    open let mutex : Mutex
+    public let mutex : Mutex
     ///  Returns a new Cond.
     /// - Parameter mutex: A Mutex object.
     public init(_ mutex : Mutex){
