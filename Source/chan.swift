@@ -37,6 +37,10 @@ open class Chan<T> : Sequence {
     internal var msgs = [Any?]()
     internal var closed = false
     internal var gconds : [Cond] = []
+    
+    internal var msgCount: UInt64 = 0
+    internal var msgRead: UInt64 = 0
+    
     /// - Parameter capacity A value greater than Zero will create a buffered channel.
     /// - Returns a Chan object
     public init(_ capacity: Int = 0){
@@ -89,8 +93,15 @@ open class Chan<T> : Sequence {
             #endif
         }
         msgs.append(msg)
+        msgCount += 1
+        let targetRead: UInt64
+        if cap > msgCount {
+            targetRead = 0
+        } else {
+            targetRead = msgCount - UInt64(cap)
+        }
         broadcast()
-        while msgs.count > cap {
+        while msgRead < targetRead {
             cond.wait()
         }
     }
@@ -100,6 +111,7 @@ open class Chan<T> : Sequence {
         while true {
             if msgs.count > 0 {
                 let msg = msgs.remove(at: 0)
+                msgRead += 1
                 broadcast()
                 return (msg as? T, false, true)
             }
